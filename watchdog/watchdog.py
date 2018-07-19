@@ -1,22 +1,20 @@
 import os
-
-import boto3
 import subprocess
 from time import sleep
 
+import boto3
 
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
-table_name="rnd-coding-challenge-wojciechmkalinski-gmailcom-WatchdogTable-1T6M0MOPDKMI2"
+table_name = "rnd-coding-challenge-wojciechmkalinski-gmailcom-WatchdogTable-1T6M0MOPDKMI2"
 
-account_id = boto3.client('sts').get_caller_identity().get('Account')
 sns = boto3.client('sns', region_name=AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY,
                    aws_secret_access_key=AWS_SECRET_KEY)
 dynamodb = boto3.resource('dynamodb')
 watchdog_table = dynamodb.Table(table_name)
-array_of_services = ['spotify', 'java']
-topic_arn='arn:aws:sns:us-west-2:632826021673:rnd-coding-challenge-wojciechmkalinski-gmailcom-WatchdogSnsTopic-YYX9A9SCNG2Z'
+topic_arn = 'arn:aws:sns:us-west-2:632826021673:rnd-coding-challenge-wojciechmkalinski-gmailcom-WatchdogSnsTopic-YYX9A9SCNG2Z'
+
 
 def insert_row():
     watchdog_table.put_item(
@@ -54,7 +52,7 @@ def check_services(id):
     out, err = p.communicate()
     for service in services:
         if service in str(out):
-            publish_sns(service + " has been started after " + str(attempts) + " attempts." )
+            publish_sns(service + " has been started after " + str(attempts) + " attempts.")
         else:
             while attempts < num_of_attempts:
                 attempts += 1
@@ -69,6 +67,3 @@ def check_services(id):
 def main(row_id):
     insert_row()
     check_services(row_id)
-
-
-main(1)
