@@ -9,14 +9,14 @@ AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY")
 AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY")
 AWS_REGION = os.getenv("AWS_REGION")
 table_name="rnd-coding-challenge-wojciechmkalinski-gmailcom-WatchdogTable-1T6M0MOPDKMI2"
-topic_arn="rnd-coding-challenge-wojciechmkalinski-gmailcom-WatchdogSnsTopic-YYX9A9SCNG2Z"
 
-sns = boto3.client("sns", region_name=AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY,
+account_id = boto3.client('sts').get_caller_identity().get('Account')
+sns = boto3.client('sns', region_name=AWS_REGION, aws_access_key_id=AWS_ACCESS_KEY,
                    aws_secret_access_key=AWS_SECRET_KEY)
 dynamodb = boto3.resource('dynamodb')
 watchdog_table = dynamodb.Table(table_name)
 array_of_services = ['spotify', 'java']
-
+topic_arn='arn:aws:sns:us-west-2:632826021673:rnd-coding-challenge-wojciechmkalinski-gmailcom-WatchdogSnsTopic-YYX9A9SCNG2Z'
 
 def insert_row():
     watchdog_table.put_item(
@@ -41,7 +41,7 @@ def check_services(id):
     response = watchdog_table.get_item(
         TableName=table_name,
         Key={
-            'id': id
+            'id': str(id)
         }
     )
     item = response['Item']
@@ -50,15 +50,15 @@ def check_services(id):
     num_of_attempts = item['NumOfAttempts']
     services = item['ListOfServices']
     p = subprocess.Popen(["ps", "-a"], stdout=subprocess.PIPE)
-    attempts = 0
+    attempts = 1
     out, err = p.communicate()
     for service in services:
         if service in str(out):
-            publish_sns(service + " has been started after " + attempts + " attempts." )
+            publish_sns(service + " has been started after " + str(attempts) + " attempts." )
         else:
             while attempts < num_of_attempts:
                 attempts += 1
-                publish_sns(service + " is not running after " + attempts + " attempts.")
+                publish_sns(service + " is not running after " + str(attempts) + " attempts.")
                 sleep(num_of_sec_wait)
                 continue
             if attempts >= num_of_attempts:
